@@ -84,14 +84,35 @@ See folders for:
 6. **EAS / TestFlight:** `EXPO_PUBLIC_*` variables must exist at **build** time. Set `EXPO_PUBLIC_N8N_BASE_URL` in the `production` profile `env` block in `frontend/mobile/eas.json`, or in [Expo dashboard environment variables](https://expo.dev), then run `eas build` again.
 
 ### Privacy policy URL (App Store Connect)
-Apple asks for a **public HTTPS URL** to your privacy policy. This repo includes a starter page at [`docs/privacy-policy.html`](docs/privacy-policy.html). Replace the placeholder contact email and align the text with your deployment, then host it and paste the final URL into App Store Connect.
+Apple asks for a **public HTTPS URL** to your privacy policy. This repo includes:
 
-**Typical ways to get a URL**
+- [`docs/privacy-policy.html`](docs/privacy-policy.html) — the policy page  
+- [`docs/index.html`](docs/index.html) — redirects to the policy (handy if Pages serves `/docs` as the site root)
 
-- **GitHub Pages:** enable Pages for this repo (often “Deploy from branch” → `main` → `/docs`). The policy is then usually available at  
-  `https://<your-github-username>.github.io/<repository-name>/privacy-policy.html`  
-  (exact path depends on your Pages settings.)
-- **Netlify / Verc / Cloudflare Pages:** upload or connect the repo and publish the `docs` folder (or the single HTML file) as a static site; use the HTTPS URL they assign.
+Replace the placeholder contact email in `privacy-policy.html` and align the text with your deployment before you submit to Apple.
+
+**GitHub Pages — which URL to use**
+
+GitHub → your repo → **Settings** → **Pages** → **Build and deployment**:
+
+| Source folder | Policy URL (project site) |
+|---------------|---------------------------|
+| **Branch `main`**, folder **`/docs`** | `https://<user>.github.io/<repo>/privacy-policy.html` or `https://<user>.github.io/<repo>/` (redirects via `index.html`) |
+| **Branch `main`**, folder **`/` (root)** | `https://<user>.github.io/<repo>/docs/privacy-policy.html` |
+
+If you pick **`/docs`**, do **not** put `/docs/` again in the path after the repo name.
+
+**If the page still does not open**
+
+1. Wait a few minutes after enabling Pages; refresh **Settings → Pages** for the green “Your site is live at …” line.  
+2. Repo must allow Pages builds (public repo is simplest on free accounts).  
+3. Confirm the branch name is **`main`** (or change Pages to match your default branch).  
+4. Open the file on GitHub to verify it exists: `https://github.com/<user>/<repo>/blob/main/docs/privacy-policy.html` — that proves the file is in git; the Pages URL is separate.  
+5. Try an incognito window or another network (DNS/cache).
+
+**Other hosts**
+
+- **Netlify Drop / Cloudflare Pages / Vercel:** deploy the `docs` folder (or upload `privacy-policy.html`) and use the HTTPS URL they give you.
 
 ## Cursor workspace
 Open `HealthGenie.code-workspace` in Cursor for a dedicated window rooted in this repo (File → Open Workspace from File…).
