@@ -1,0 +1,15 @@
+{
+  "name": "Diet Planning Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "functionCode": "const p = $json.profile || {};\nconst goal = p.goal || 'maintain';\nconst baseCalories = goal === 'weight_loss' ? 1800 : (goal === 'muscle_gain' ? 2400 : 2100);\nconst proteinG = Math.round((p.weight_kg || 70) * (goal === 'muscle_gain' ? 1.8 : 1.2));\nconst vegetarian = (p.diet_pref || '').toLowerCase().includes('vegetarian');\nconst plan = {\n  calories_target: baseCalories,\n  protein_target_g: proteinG,\n  meals: [\n    vegetarian ? 'Greek yogurt + berries + nuts' : 'Eggs + whole grain toast + fruit',\n    vegetarian ? 'Lentil bowl + vegetables + brown rice' : 'Grilled chicken + quinoa + vegetables',\n    vegetarian ? 'Tofu/paneer + mixed vegetables + salad' : 'Fish + vegetables + olive oil salad'\n  ]\n};\nreturn [{ json: { ...$json, diet_plan: plan } }];"
+      },
+      "name": "Generate Diet Plan",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [500, 300]
+    }
+  ],
+  "connections": {}
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Exercise Planning Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "functionCode": "const p = $json.profile || {};\nconst low = (p.activity_level || '').toLowerCase() === 'low';\nconst jointPain = String(p.medical_constraints || '').toLowerCase().includes('joint');\nlet cardio = low ? '20-30 min brisk walk, 5x/week' : '30-40 min mixed cardio, 4-5x/week';\nif (jointPain) cardio = 'Low-impact cardio (walk/cycle/swim), 5x/week';\nconst plan = {\n  weekly_plan: [\n    cardio,\n    'Strength training 2-3x/week',\n    'Mobility and stretching 10 min daily'\n  ],\n  avoid: jointPain ? ['High-impact running', 'Deep loaded knee flexion'] : []\n};\nreturn [{ json: { ...$json, exercise_plan: plan } }];"
+      },
+      "name": "Generate Exercise Plan",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [500, 300]
+    }
+  ],
+  "connections": {}
+}

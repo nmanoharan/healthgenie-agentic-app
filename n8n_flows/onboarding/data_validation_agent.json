@@ -1,0 +1,15 @@
+{
+  "name": "Data Validation Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "functionCode": "const p = $json.profile || {};\nconst issues = [];\nif (!p.height_cm) issues.push('Height missing');\nif (!p.weight_kg) issues.push('Weight missing');\nif (p.weight_kg && (p.weight_kg < 25 || p.weight_kg > 300)) issues.push('Weight unrealistic, confirm value');\nif (p.height_cm && (p.height_cm < 100 || p.height_cm > 240)) issues.push('Height unrealistic, confirm value');\nif (p.medical_constraints && p.medical_constraints !== 'none') issues.push('Medical constraints noted: include safety disclaimer');\nreturn [{ json: { ...$json, validation_issues: issues, is_valid: issues.length === 0 } }];"
+      },
+      "name": "Validate Profile",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 280]
+    }
+  ],
+  "connections": {}
+}

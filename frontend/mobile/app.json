@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "HealthGenie",
+    "slug": "healthgenie-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "healthgenie",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.healthgenie.mobile"
+    },
+    "android": {
+      "package": "com.healthgenie.mobile"
+    },
+    "plugins": [],
+    "extra": {
+      "eas": {
+        "projectId": "b86754a3-7805-4eae-ba14-96b298203a8f"
+      }
+    }
+  }
+}

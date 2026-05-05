@@ -1,0 +1,15 @@
+{
+  "name": "Wellness Risk Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "functionCode": "const p = $json.profile || {};\nconst h = (p.height_cm || 0) / 100;\nconst w = Number(p.weight_kg || 0);\nconst bmi = (h > 0) ? +(w / (h*h)).toFixed(1) : null;\nconst risks = [];\nif (bmi && bmi >= 30) risks.push('weight_management_risk:high');\nelse if (bmi && bmi >= 25) risks.push('weight_management_risk:moderate');\nif ((p.family_history || '').toLowerCase().includes('diabetes')) risks.push('diabetes_lifestyle_risk:elevated');\nif ((p.activity_level || '').toLowerCase() === 'low') risks.push('low_activity_risk:elevated');\nif (p.age >= 45) risks.push('cardiometabolic_prevention_focus:recommended');\nreturn [{ json: { ...$json, bmi, wellness_risks: risks } }];"
+      },
+      "name": "Compute Wellness Indicators",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [480, 280]
+    }
+  ],
+  "connections": {}
+}

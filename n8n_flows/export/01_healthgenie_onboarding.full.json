@@ -1,0 +1,426 @@
+{
+  "name": "HealthGenie \u2014 Onboarding (Full Pipeline)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "healthgenie/onboarding",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "2036702e-d4a6-4a9e-bdd6-a1c0609c9389",
+      "name": "Webhook Onboarding",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "72f14eae-cfff-439b-9b4a-c33669f52aa0"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const root = $json.body ?? $json;\nconst body = (typeof root === 'object' && root !== null) ? root : {};\nconst required = ['age','height_cm','weight_kg','activity_level','goal','diet_pref'];\nconst missing = required.filter(k => body[k] === undefined || body[k] === null || String(body[k]).trim() === '');\nreturn [{ json: { profile: body, missing_fields: missing } }];"
+      },
+      "id": "16208bb2-7e1f-46e7-8843-6d5c12ceeaec",
+      "name": "Normalize Profile",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const p = $json.profile || {};\nconst issues = [];\nif (($json.missing_fields || []).length) {\n  issues.push('Missing required fields: ' + $json.missing_fields.join(', '));\n}\nif (!p.height_cm) issues.push('Height missing');\nif (!p.weight_kg) issues.push('Weight missing');\nif (p.weight_kg && (Number(p.weight_kg) < 25 || Number(p.weight_kg) > 300)) issues.push('Weight unrealistic, confirm value');\nif (p.height_cm && (Number(p.height_cm) < 100 || Number(p.height_cm) > 240)) issues.push('Height unrealistic, confirm value');\nif (p.medical_constraints && String(p.medical_constraints).toLowerCase() !== 'none') {\n  issues.push('Medical constraints noted: include safety disclaimer in coaching copy');\n}\nreturn [{ json: { ...$json, validation_issues: issues, is_valid: issues.length === 0 } }];"
+      },
+      "id": "cf2fb162-94d6-49ca-bd0c-845539bffaa9",
+      "name": "Validate Profile",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "4ee7ca99-38ad-41be-855e-83cf6f583612",
+              "leftValue": "={{ $json.is_valid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "54ede5b1-927d-44df-b234-d1c70ffd98bc",
+      "name": "IF Profile Valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{ json: {\n  ok: false,\n  http_status: 422,\n  stage: 'validation',\n  validation_issues: $json.validation_issues || [],\n  missing_fields: $json.missing_fields || [],\n  message: 'Please fix validation issues before generating a plan.'\n} }];"
+      },
+      "id": "8c7c56d2-e0ba-43ab-90b8-3c49a045faea",
+      "name": "Build Validation Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const p = $json.profile || {};\nconst h = (Number(p.height_cm) || 0) / 100;\nconst w = Number(p.weight_kg) || 0;\nconst bmi = (h > 0) ? +(w / (h*h)).toFixed(1) : null;\nconst risks = [];\nif (bmi && bmi >= 30) risks.push('weight_management_risk:high');\nelse if (bmi && bmi >= 25) risks.push('weight_management_risk:moderate');\nif (String(p.family_history || '').toLowerCase().includes('diabetes')) risks.push('diabetes_lifestyle_risk:elevated');\nif (String(p.activity_level || '').toLowerCase() === 'low') risks.push('low_activity_risk:elevated');\nif (Number(p.age) >= 45) risks.push('cardiometabolic_prevention_focus:recommended');\nreturn [{ json: { ...$json, bmi, wellness_risks: risks } }];"
+      },
+      "id": "9d8e219b-f815-41fb-8248-dcbd5c64d8ca",
+      "name": "Compute Wellness Indicators",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const p = $json.profile || {};\nconst notes = [];\nconst eth = String(p.ethnicity || '').toLowerCase();\nconst fh = String(p.family_history || '').toLowerCase();\nif (fh.includes('diabetes')) {\n  notes.push('Prioritize low-glycemic meal pairings and a short walk after larger meals.');\n}\nif (eth.includes('south') && eth.includes('asian')) {\n  notes.push('Emphasize legumes, vegetables, and whole grains; moderate refined flour where possible.');\n}\nif (fh.includes('heart') || fh.includes('hypertension')) {\n  notes.push('Favor DASH-style patterns: vegetables, potassium-rich foods, limited sodium.');\n}\nreturn [{ json: { ...$json, personalization_notes: notes } }];"
+      },
+      "id": "1cff51b7-26ce-48b5-bef0-d50ff3d2b379",
+      "name": "Ethnicity Family Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const p = $json.profile || {};\nconst goal = p.goal || 'maintain';\nconst baseCalories = goal === 'weight_loss' ? 1800 : (goal === 'muscle_gain' ? 2400 : 2100);\nconst proteinG = Math.round((Number(p.weight_kg) || 70) * (goal === 'muscle_gain' ? 1.8 : 1.2));\nconst vegetarian = String(p.diet_pref || '').toLowerCase().includes('vegetarian');\nconst plan = {\n  calories_target: baseCalories,\n  protein_target_g: proteinG,\n  meals: [\n    vegetarian ? 'Greek yogurt + berries + nuts' : 'Eggs + whole grain toast + fruit',\n    vegetarian ? 'Lentil bowl + vegetables + brown rice' : 'Grilled chicken + quinoa + vegetables',\n    vegetarian ? 'Tofu/paneer + mixed vegetables + salad' : 'Fish + vegetables + olive oil salad'\n  ]\n};\nreturn [{ json: { ...$json, diet_plan: plan } }];"
+      },
+      "id": "466dff4b-48b7-43ee-9f0c-c0939788f1ee",
+      "name": "Generate Diet Plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const p = $json.profile || {};\nconst low = String(p.activity_level || '').toLowerCase() === 'low';\nconst jointPain = String(p.medical_constraints || '').toLowerCase().includes('joint');\nlet cardio = low ? '20-30 min brisk walk, 5x/week' : '30-40 min mixed cardio, 4-5x/week';\nif (jointPain) cardio = 'Low-impact cardio (walk/cycle/swim), 5x/week';\nconst plan = {\n  weekly_plan: [cardio, 'Strength training 2-3x/week', 'Mobility and stretching 10 min daily'],\n  avoid: jointPain ? ['High-impact running', 'Deep loaded knee flexion'] : []\n};\nreturn [{ json: { ...$json, exercise_plan: plan } }];"
+      },
+      "id": "bc1626c0-9180-4d41-b694-fb058029fb36",
+      "name": "Generate Exercise Plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const text = JSON.stringify($json).toLowerCase();\nconst redFlags = ['chest pain','fainting','severe shortness of breath','very high blood sugar','very high blood pressure','sudden weakness','severe allergic reaction'];\nconst hits = redFlags.filter(r => text.includes(r));\nif (hits.length) {\n  return [{ json: { safe_to_continue: false, red_flags: hits, escalation: 'Possible urgent symptoms detected. Seek immediate medical care or call emergency services.', stage: 'safety_escalation' } }];\n}\nreturn [{ json: { ...$json, safe_to_continue: true, red_flags: [] } }];"
+      },
+      "id": "511ae80b-d891-42a1-aa4b-0dcc9cd8560d",
+      "name": "Run Safety Filter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "8d7413d2-948d-46b0-9064-b387f9eabd29",
+              "leftValue": "={{ $json.safe_to_continue }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "fc89e79e-8067-4d17-9c9a-ffcf382990f5",
+      "name": "IF Safe To Continue",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2160,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const j = $json;\nreturn [{ json: {\n  ok: true,\n  http_status: 200,\n  stage: 'plan_ready',\n  profile_summary: { bmi: j.bmi, wellness_risks: j.wellness_risks },\n  personalization_notes: j.personalization_notes || [],\n  diet_plan: j.diet_plan,\n  exercise_plan: j.exercise_plan,\n  safety: { passed: true, red_flags: j.red_flags || [] },\n  disclaimer: 'Preventive wellness guidance only \u2014 not medical diagnosis or treatment.'\n} }];"
+      },
+      "id": "55b9f112-4d51-4ce9-aa03-b543794c6d34",
+      "name": "Build Success Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{ json: {\n  ok: false,\n  http_status: 200,\n  stage: 'safety_escalation',\n  escalation: $json.escalation,\n  red_flags: $json.red_flags,\n  diet_plan: null,\n  exercise_plan: null,\n  disclaimer: 'Safety stop: seek licensed urgent or emergency care if appropriate.'\n} }];"
+      },
+      "id": "eb9de0d8-cf47-4ea4-9731-32a055cf81b8",
+      "name": "Build Escalation Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "68bd957c-91bc-4dd9-a764-6c95b14c7c7f",
+      "name": "Respond To Client",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1600,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Optional LLM layer\nAdd **OpenAI** / **Anthropic** nodes after Ethnicity Context to rewrite meal copy using `prompts/diet_agent_prompt.md`.\nCreate credentials in n8n: **OpenAI API** or **Header Auth** for HTTP Request."
+      },
+      "id": "904f35c0-6dac-41c7-ab22-d4c6f0bf0f9f",
+      "name": "Sticky LLM Placeholder",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        400,
+        -200
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Onboarding": {
+      "main": [
+        [
+          {
+            "node": "Normalize Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Profile": {
+      "main": [
+        [
+          {
+            "node": "Validate Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Profile": {
+      "main": [
+        [
+          {
+            "node": "IF Profile Valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Profile Valid": {
+      "main": [
+        [
+          {
+            "node": "Compute Wellness Indicators",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Validation Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Validation Response": {
+      "main": [
+        [
+          {
+            "node": "Respond To Client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Wellness Indicators": {
+      "main": [
+        [
+          {
+            "node": "Ethnicity Family Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ethnicity Family Context": {
+      "main": [
+        [
+          {
+            "node": "Generate Diet Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Diet Plan": {
+      "main": [
+        [
+          {
+            "node": "Generate Exercise Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Exercise Plan": {
+      "main": [
+        [
+          {
+            "node": "Run Safety Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Safety Filter": {
+      "main": [
+        [
+          {
+            "node": "IF Safe To Continue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Safe To Continue": {
+      "main": [
+        [
+          {
+            "node": "Build Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Escalation Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Success Response": {
+      "main": [
+        [
+          {
+            "node": "Respond To Client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Escalation Response": {
+      "main": [
+        [
+          {
+            "node": "Respond To Client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

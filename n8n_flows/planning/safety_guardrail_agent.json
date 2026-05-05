@@ -1,0 +1,15 @@
+{
+  "name": "Safety Guardrail Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "functionCode": "const text = JSON.stringify($json).toLowerCase();\nconst redFlags = ['chest pain','fainting','severe shortness of breath','very high blood sugar','very high blood pressure','sudden weakness','severe allergic reaction'];\nconst hits = redFlags.filter(r => text.includes(r));\nif (hits.length) {\n  return [{ json: { safe_to_continue: false, red_flags: hits, escalation: 'Possible urgent symptoms detected. Seek immediate medical care or call emergency services.' } }];\n}\nreturn [{ json: { ...$json, safe_to_continue: true, red_flags: [] } }];"
+      },
+      "name": "Run Safety Filter",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [520, 300]
+    }
+  ],
+  "connections": {}
+}

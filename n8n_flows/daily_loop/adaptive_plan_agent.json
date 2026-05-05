@@ -1,0 +1,15 @@
+{
+  "name": "Adaptive Plan Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "functionCode": "const c = $json.checkpoint || {};\nconst updates = [];\nif (String(c.pain_reported || '').toLowerCase().includes('knee')) {\n  updates.push('Reduce impact activities');\n  updates.push('Replace running with walking/cycling');\n  updates.push('Add 10-minute mobility routine');\n}\nif ((c.energy || 3) <= 2) updates.push('Lower training intensity by 20% for next session');\nif ((c.sleep_quality || 3) <= 2) updates.push('Focus on sleep hygiene and earlier workout timing');\nif ((c.meal_adherence || '').toLowerCase() === 'low') updates.push('Simplify meals and add prep-friendly options');\nreturn [{ json: { ...$json, adaptive_updates: updates, next_day_plan_adjusted: updates.length > 0 } }];"
+      },
+      "name": "Adapt Next-Day Plan",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [490, 290]
+    }
+  ],
+  "connections": {}
+}

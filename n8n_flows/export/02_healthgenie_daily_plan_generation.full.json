@@ -1,0 +1,221 @@
+{
+  "name": "HealthGenie \u2014 Daily Plan Generation",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "c86e3096-fc16-47ed-83e0-310d403ffab2",
+      "name": "Manual Test Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * *"
+            }
+          ]
+        }
+      },
+      "id": "bc56ff0d-3cd8-4d2a-96d3-4d79429811f0",
+      "name": "Schedule Morning 7am",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{ json: {\n  profile: {\n    user_id: 'MOCK_SCHEDULED',\n    age: 45,\n    gender: 'male',\n    height_cm: 173,\n    weight_kg: 86,\n    activity_level: 'low',\n    goal: 'weight_loss',\n    diet_pref: 'vegetarian',\n    allergies: 'none',\n    ethnicity: 'south_asian',\n    family_history: 'diabetes',\n    medical_constraints: 'none'\n  }\n} }];"
+      },
+      "id": "50f83d98-ce48-4293-94e0-36f19464d145",
+      "name": "Set Mock Active User",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        280,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const p = $json.profile || {};\nconst h = (Number(p.height_cm) || 0) / 100;\nconst w = Number(p.weight_kg) || 0;\nconst bmi = (h > 0) ? +(w / (h*h)).toFixed(1) : null;\nconst risks = [];\nif (bmi && bmi >= 30) risks.push('weight_management_risk:high');\nelse if (bmi && bmi >= 25) risks.push('weight_management_risk:moderate');\nif (String(p.family_history || '').toLowerCase().includes('diabetes')) risks.push('diabetes_lifestyle_risk:elevated');\nif (String(p.activity_level || '').toLowerCase() === 'low') risks.push('low_activity_risk:elevated');\nif (Number(p.age) >= 45) risks.push('cardiometabolic_prevention_focus:recommended');\nreturn [{ json: { ...$json, bmi, wellness_risks: risks } }];"
+      },
+      "id": "4249085b-7314-4234-9b7c-818f15e409e1",
+      "name": "Compute Wellness Indicators",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const p = $json.profile || {};\nconst goal = p.goal || 'maintain';\nconst baseCalories = goal === 'weight_loss' ? 1800 : (goal === 'muscle_gain' ? 2400 : 2100);\nconst proteinG = Math.round((Number(p.weight_kg) || 70) * (goal === 'muscle_gain' ? 1.8 : 1.2));\nconst vegetarian = String(p.diet_pref || '').toLowerCase().includes('vegetarian');\nconst plan = {\n  calories_target: baseCalories,\n  protein_target_g: proteinG,\n  meals: [\n    vegetarian ? 'Greek yogurt + berries + nuts' : 'Eggs + whole grain toast + fruit',\n    vegetarian ? 'Lentil bowl + vegetables + brown rice' : 'Grilled chicken + quinoa + vegetables',\n    vegetarian ? 'Tofu/paneer + mixed vegetables + salad' : 'Fish + vegetables + olive oil salad'\n  ]\n};\nreturn [{ json: { ...$json, diet_plan: plan } }];"
+      },
+      "id": "4e936157-6bbd-4278-ba2e-478fb6e095dc",
+      "name": "Generate Diet Plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        760,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const p = $json.profile || {};\nconst low = String(p.activity_level || '').toLowerCase() === 'low';\nconst jointPain = String(p.medical_constraints || '').toLowerCase().includes('joint');\nlet cardio = low ? '20-30 min brisk walk, 5x/week' : '30-40 min mixed cardio, 4-5x/week';\nif (jointPain) cardio = 'Low-impact cardio (walk/cycle/swim), 5x/week';\nconst plan = {\n  weekly_plan: [cardio, 'Strength training 2-3x/week', 'Mobility and stretching 10 min daily'],\n  avoid: jointPain ? ['High-impact running', 'Deep loaded knee flexion'] : []\n};\nreturn [{ json: { ...$json, exercise_plan: plan } }];"
+      },
+      "id": "94853b2b-bfeb-41d7-9b9b-b52cac204952",
+      "name": "Generate Exercise Plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const text = JSON.stringify($json).toLowerCase();\nconst redFlags = ['chest pain','fainting','severe shortness of breath','very high blood sugar','very high blood pressure','sudden weakness','severe allergic reaction'];\nconst hits = redFlags.filter(r => text.includes(r));\nif (hits.length) {\n  return [{ json: { safe_to_continue: false, red_flags: hits, escalation: 'Possible urgent symptoms detected. Seek immediate medical care or call emergency services.', stage: 'safety_escalation' } }];\n}\nreturn [{ json: { ...$json, safe_to_continue: true, red_flags: [] } }];"
+      },
+      "id": "4737dc72-bcaf-4780-bb4f-721bdd0519a2",
+      "name": "Run Safety Filter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const j = $json;\nreturn [{ json: {\n  ok: j.safe_to_continue !== false,\n  stage: j.safe_to_continue === false ? 'safety_escalation' : 'daily_plan_ready',\n  generated_at: new Date().toISOString(),\n  profile_summary: { bmi: j.bmi, wellness_risks: j.wellness_risks },\n  diet_plan: j.diet_plan,\n  exercise_plan: j.exercise_plan,\n  escalation: j.escalation || null,\n  red_flags: j.red_flags || [],\n  note: 'Replace Set Mock Active User with Supabase/Postgres fetch for real users.'\n} }];"
+      },
+      "id": "26b093bb-f46a-4ada-882a-5f0710c3964e",
+      "name": "Build Daily Plan Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Wire your datastore\nReplace **Set Mock Active User** with **Postgres** / **Supabase** node.\nAdd **FCM** / **Twilio** after Build Daily Plan Output for push."
+      },
+      "id": "8f473b1a-6cf2-4faa-84d0-e321485b5cca",
+      "name": "Sticky Data And Notify",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        240,
+        80
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Test Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Mock Active User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Morning 7am": {
+      "main": [
+        [
+          {
+            "node": "Set Mock Active User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Mock Active User": {
+      "main": [
+        [
+          {
+            "node": "Compute Wellness Indicators",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Wellness Indicators": {
+      "main": [
+        [
+          {
+            "node": "Generate Diet Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Diet Plan": {
+      "main": [
+        [
+          {
+            "node": "Generate Exercise Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Exercise Plan": {
+      "main": [
+        [
+          {
+            "node": "Run Safety Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Safety Filter": {
+      "main": [
+        [
+          {
+            "node": "Build Daily Plan Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

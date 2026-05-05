@@ -1,0 +1,28 @@
+{
+  "rules": [
+    {
+      "condition": "age >= 50 AND activity_level == 'low'",
+      "recommendation": {
+        "cardio": "20-30 min brisk walk, 5x/week",
+        "strength": "bodyweight or resistance bands, 2x/week",
+        "mobility": "10 min joint mobility daily"
+      }
+    },
+    {
+      "condition": "goal == 'weight_loss' AND joint_pain == true",
+      "recommendation": {
+        "cardio": "cycling, walking, or swimming",
+        "avoid": "high-impact running",
+        "mobility": "lower-body stretching and knee-safe drills"
+      }
+    },
+    {
+      "condition": "goal == 'muscle_gain' AND activity_level == 'high'",
+      "recommendation": {
+        "strength": "progressive overload program 4x/week",
+        "cardio": "zone-2 cardio 2x/week",
+        "recovery": "sleep target 7-9 hours"
+      }
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+food_name,serving,calories,protein_g,carbs_g,fat_g,fiber_g,diet_tags,cultural_tags
+Greek yogurt,170g,100,17,6,0,0,vegetarian,global
+Lentils cooked,1 cup,230,18,40,1,16,vegan,indian
+Brown rice,1 cup,216,5,45,2,3,vegan,global
+Tofu firm,150g,180,18,5,10,2,vegan,east_asian
+Paneer,100g,265,18,3,20,0,vegetarian,indian
+Spinach,1 cup,23,3,4,0,2,vegan,global
+Almonds,28g,164,6,6,14,3,vegan,global
+Chickpeas cooked,1 cup,269,15,45,4,12,vegan,middle_eastern
+Oats,40g,152,5,27,3,4,vegan,global
+Berries,100g,57,1,14,0,2,vegan,global

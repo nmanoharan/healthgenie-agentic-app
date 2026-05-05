@@ -1,0 +1,39 @@
+{
+  "name": "Daily Checkpoint Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "healthgenie/checkpoint",
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [260, 280]
+    },
+    {
+      "parameters": {
+        "functionCode": "const body = $json.body || $json;\nconst required = ['activity_done','steps','energy','sleep_quality','pain_reported','meal_adherence'];\nconst missing = required.filter(k => body[k] === undefined || body[k] === null || body[k] === '');\nreturn [{ json: { checkpoint: body, missing_fields: missing } }];"
+      },
+      "name": "Parse Checkpoint",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [510, 280]
+    },
+    {
+      "parameters": {
+        "responseBody": "={{$json}}",
+        "responseCode": 200
+      },
+      "name": "Return Checkpoint Summary",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [760, 280]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": { "main": [[{ "node": "Parse Checkpoint", "type": "main", "index": 0 }]] },
+    "Parse Checkpoint": { "main": [[{ "node": "Return Checkpoint Summary", "type": "main", "index": 0 }]] }
+  }
+}

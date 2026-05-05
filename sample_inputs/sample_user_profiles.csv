@@ -1,0 +1,6 @@
+user_id,age,gender,height_cm,weight_kg,activity_level,goal,diet_pref,allergies,ethnicity,family_history,medical_constraints
+U001,45,male,173,86,low,weight_loss,vegetarian,none,south_asian,diabetes,none
+U002,32,female,165,62,moderate,maintain,omnivore,peanut,east_asian,none,mild_asthma
+U003,58,female,160,78,low,heart_health,pescatarian,none,african,hypertension,joint_pain
+U004,27,male,180,72,high,muscle_gain,omnivore,shellfish,latino,none,none
+U005,40,non_binary,168,95,low,diabetes_prevention,vegetarian,gluten,middle_eastern,diabetes,prediabetes

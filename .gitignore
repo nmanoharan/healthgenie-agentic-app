@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs / caches
+dist/
+build/
+.expo/
+.turbo/
+.next/
+*.tsbuildinfo
+
+# Expo / React Native native dirs (regenerate with npx expo prebuild)
+frontend/mobile/ios/Pods/
+frontend/mobile/ios/build/
+frontend/mobile/android/.gradle/
+frontend/mobile/android/app/build/
+
+# Env (never commit secrets)
+.env
+.env.local
+.env.*.local
+**/.env
+**/expo.env
+!**/.env.example
+
+# Logs / OS / IDE
+*.log
+.DS_Store
+.idea/
+.vscode/
+*.xcuserstate
+**/xcuserdata/
+
+# Python
+__pycache__/
+.venv/
+venv/
+*.py[cod]
+
+# Archives / local installs
+*.ipa
+*.app

@@ -1,0 +1,39 @@
+{
+  "name": "Profile Collection Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "healthgenie/onboarding",
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [260, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const body = $json.body || $json;\nconst required = ['age','height_cm','weight_kg','activity_level','goal','diet_pref'];\nconst missing = required.filter(k => body[k] === undefined || body[k] === null || body[k] === '');\nreturn [{ json: { profile: body, missing_fields: missing } }];"
+      },
+      "name": "Normalize Profile",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [520, 300]
+    },
+    {
+      "parameters": {
+        "responseBody": "={{$json}}",
+        "responseCode": 200
+      },
+      "name": "Return Intake Payload",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [760, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": { "main": [[{ "node": "Normalize Profile", "type": "main", "index": 0 }]] },
+    "Normalize Profile": { "main": [[{ "node": "Return Intake Payload", "type": "main", "index": 0 }]] }
+  }
+}

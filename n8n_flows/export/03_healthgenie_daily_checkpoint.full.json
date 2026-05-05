@@ -1,0 +1,262 @@
+{
+  "name": "HealthGenie \u2014 Daily Checkpoint Loop",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "healthgenie/checkpoint",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "61d693e0-d08a-43d4-bae6-dee210fa9d08",
+      "name": "Webhook Checkpoint",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "90698621-1d62-4f23-bb26-41d285222694"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const root = $json.body ?? $json;\nconst body = (typeof root === 'object' && root !== null) ? root : {};\nconst required = ['activity_done','steps','energy','sleep_quality','pain_reported','meal_adherence'];\nconst missing = required.filter(k => body[k] === undefined || body[k] === null || String(body[k]).trim() === '');\nreturn [{ json: { checkpoint: body, missing_fields: missing } }];"
+      },
+      "id": "582c9bfe-fd6b-4db2-9e09-278f0775e8c8",
+      "name": "Parse Checkpoint",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "0e4a6544-057e-4292-b213-ca67bd74bd2d",
+              "leftValue": "={{ ($json.missing_fields || []).length === 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "2c8fbea2-0058-482c-881a-4fc6ce7eedd5",
+      "name": "IF Checkpoint Complete",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{ json: {\n  ok: false,\n  http_status: 422,\n  stage: 'checkpoint_incomplete',\n  missing_fields: $json.missing_fields,\n  message: 'Please answer all checkpoint fields.'\n} }];"
+      },
+      "id": "3bd27d1d-a59d-4cc6-800a-51bf516db36f",
+      "name": "Build Missing Checkpoint Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const c = $json.checkpoint || {};\nconst updates = [];\nif (String(c.pain_reported || '').toLowerCase().includes('knee')) {\n  updates.push('Reduce impact activities');\n  updates.push('Replace running with walking/cycling');\n  updates.push('Add 10-minute mobility routine');\n}\nif (Number(c.energy) <= 2) updates.push('Lower training intensity by 20% for next session');\nif (Number(c.sleep_quality) <= 2) updates.push('Focus on sleep hygiene and earlier workout timing');\nif (String(c.meal_adherence || '').toLowerCase() === 'low') updates.push('Simplify meals and add prep-friendly options');\nreturn [{ json: { ...$json, adaptive_updates: updates, next_day_plan_adjusted: updates.length > 0 } }];"
+      },
+      "id": "2caac7a2-e6e2-419f-9aaf-d984fec67734",
+      "name": "Adapt Next-Day Plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const c = $json.checkpoint || {};\nlet score = 0;\nif (c.activity_done === true || String(c.activity_done).toLowerCase() === 'yes') score += 1;\nif (Number(c.steps) >= 5000) score += 1;\nif (String(c.meal_adherence || '').toLowerCase() === 'high') score += 1;\nreturn [{ json: { ...$json, adherence_score: score } }];"
+      },
+      "id": "7ad1233f-8edf-441f-8f30-272a73426de6",
+      "name": "Progress Analyzer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const text = JSON.stringify($json.checkpoint || {}).toLowerCase();\nconst redFlags = ['chest pain','fainting','severe shortness of breath','very high blood sugar','very high blood pressure','sudden weakness','severe allergic reaction'];\nconst hits = redFlags.filter(r => text.includes(r));\nif (hits.length) {\n  return [{ json: { ...$json, safe_to_continue: false, red_flags: hits, escalation: 'Possible urgent symptoms detected. Seek immediate medical care or call emergency services.' } }];\n}\nreturn [{ json: { ...$json, safe_to_continue: true, red_flags: [] } }];"
+      },
+      "id": "89f8b5de-6042-48ae-9feb-583f7ae9995c",
+      "name": "Safety On Checkpoint Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const j = $json;\nreturn [{ json: {\n  ok: j.safe_to_continue !== false,\n  http_status: 200,\n  stage: j.safe_to_continue === false ? 'safety_escalation' : 'checkpoint_processed',\n  adherence_score: j.adherence_score,\n  adaptive_updates: j.adaptive_updates,\n  next_day_plan_adjusted: j.next_day_plan_adjusted,\n  escalation: j.escalation || null,\n  red_flags: j.red_flags || [],\n  disclaimer: 'Preventive wellness guidance only.'\n} }];"
+      },
+      "id": "72976917-a7f4-4934-864c-1cfa48faa3b8",
+      "name": "Build Checkpoint Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "9b4cef5d-20cc-4868-b99c-f50286f07b05",
+      "name": "Respond Checkpoint",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1920,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Checkpoint": {
+      "main": [
+        [
+          {
+            "node": "Parse Checkpoint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Checkpoint": {
+      "main": [
+        [
+          {
+            "node": "IF Checkpoint Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Checkpoint Complete": {
+      "main": [
+        [
+          {
+            "node": "Adapt Next-Day Plan",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Missing Checkpoint Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Missing Checkpoint Response": {
+      "main": [
+        [
+          {
+            "node": "Respond Checkpoint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Adapt Next-Day Plan": {
+      "main": [
+        [
+          {
+            "node": "Progress Analyzer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Progress Analyzer": {
+      "main": [
+        [
+          {
+            "node": "Safety On Checkpoint Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Safety On Checkpoint Text": {
+      "main": [
+        [
+          {
+            "node": "Build Checkpoint Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Checkpoint Response": {
+      "main": [
+        [
+          {
+            "node": "Respond Checkpoint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

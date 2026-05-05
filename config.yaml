@@ -1,0 +1,34 @@
+app:
+  name: healthgenie-ai
+  environment: development
+  timezone: America/New_York
+
+llm:
+  provider: openai
+  model: gpt-4o-mini
+  temperature: 0.2
+
+storage:
+  profile_store: supabase
+  memory_store: n8n_memory
+
+safety:
+  allow_medical_diagnosis: false
+  escalation_message: "I cannot provide medical diagnosis. If symptoms are severe or urgent, seek emergency care immediately."
+  red_flags:
+    - chest_pain
+    - fainting
+    - severe_shortness_of_breath
+    - very_high_blood_sugar
+    - very_high_blood_pressure
+    - sudden_weakness
+    - severe_allergic_reaction
+
+notifications:
+  provider: firebase
+  daily_plan_time: "07:00"
+  daily_checkpoint_time: "20:00"
+
+workflows:
+  onboarding_webhook: "/webhook/healthgenie/onboarding"
+  checkpoint_webhook: "/webhook/healthgenie/checkpoint"
