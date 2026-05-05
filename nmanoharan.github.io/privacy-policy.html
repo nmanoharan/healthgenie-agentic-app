@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HealthGenie — Privacy Policy</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --fg: #1a1a1a;
+        --muted: #555;
+        --bg: #fafafa;
+        --card: #fff;
+        --border: #e5e5e5;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --fg: #e8e8e8;
+          --muted: #a3a3a3;
+          --bg: #121212;
+          --card: #1c1c1c;
+          --border: #333;
+        }
+      }
+      body {
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        line-height: 1.55;
+        margin: 0;
+        padding: 1.5rem;
+        color: var(--fg);
+        background: var(--bg);
+      }
+      main {
+        max-width: 42rem;
+        margin: 0 auto;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.75rem 1.5rem 2rem;
+      }
+      h1 {
+        font-size: 1.5rem;
+        margin: 0 0 0.5rem;
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+      }
+      h2 {
+        font-size: 1.1rem;
+        margin: 1.5rem 0 0.5rem;
+      }
+      p,
+      li {
+        margin: 0.5rem 0;
+        color: var(--fg);
+      }
+      ul {
+        padding-left: 1.25rem;
+      }
+      .note {
+        font-size: 0.875rem;
+        color: var(--muted);
+        border-left: 3px solid var(--border);
+        padding-left: 0.75rem;
+        margin-top: 1.5rem;
+      }
+      a {
+        color: inherit;
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Privacy Policy — HealthGenie</h1>
+      <p class="meta">Last updated: <time datetime="2026-05-03">May 3, 2026</time></p>
+
+      <p>
+        This policy describes how the HealthGenie prototype applications and related materials in this project handle
+        information. HealthGenie provides <strong>preventive wellness guidance only</strong> and is not a medical device
+        or substitute for professional care.
+      </p>
+
+      <h2>Who this applies to</h2>
+      <p>
+        This policy applies to users of the HealthGenie <strong>web</strong> and <strong>mobile</strong> demo clients
+        that send data to workflows you operate (for example, n8n webhooks you configure).
+      </p>
+
+      <h2>What we collect</h2>
+      <p>Depending on how you use the app, the following categories of information may be processed:</p>
+      <ul>
+        <li>
+          <strong>Wellness profile inputs</strong> (for example: age, height, weight, activity level, goals, diet
+          preferences, allergies, ethnicity or cultural context, family history context, medical constraints text you
+          enter).
+        </li>
+        <li>
+          <strong>Daily checkpoint inputs</strong> (for example: activity completion, steps, energy and sleep ratings,
+          pain reporting text, meal adherence).
+        </li>
+        <li>
+          <strong>Technical data</strong> typical of mobile/web apps (for example: IP address, device/browser type,
+          timestamps) as handled by your hosting providers, n8n instance, and any analytics you enable outside this
+          repository.
+        </li>
+      </ul>
+
+      <h2>How information is used</h2>
+      <p>Information you submit is used to:</p>
+      <ul>
+        <li>Generate onboarding summaries, diet and exercise plan outputs, checkpoint responses, and safety messaging.</li>
+        <li>Improve reliability of the prototype during your testing.</li>
+      </ul>
+      <p>
+        This repository does not include a production user database. Any persistence is configured by you (for example,
+        n8n execution history, external databases, or local on-device storage in the mobile demo).
+      </p>
+
+      <h2>On-device storage (mobile demo)</h2>
+      <p>
+        The Expo mobile demo may store recent responses locally on your device (for example, to show the last plan view
+        after closing the app). That data remains on the device unless you clear app storage or uninstall the app.
+      </p>
+
+      <h2>Third-party services you control</h2>
+      <p>
+        When you configure the app to call your <strong>n8n</strong> instance, inputs are transmitted to that
+        instance. Your use of n8n is governed by your agreement with n8n and your own privacy practices. If you connect
+        LLM providers or databases inside workflows, those providers may process data according to their policies.
+      </p>
+
+      <h2>Legal bases (summary)</h2>
+      <p>
+        For EU/UK concepts, processing is generally based on <strong>consent</strong> (where you present a consent
+        step) and/or <strong>legitimate interests</strong> in operating and securing your prototype, depending on how you
+        deploy the system. You should align this section with your actual deployment and legal advice.
+      </p>
+
+      <h2>Retention</h2>
+      <p>
+        Retention depends on your n8n settings, databases, and logs. This repository does not define a global retention
+        schedule for end users.
+      </p>
+
+      <h2>Security</h2>
+      <p>
+        Use HTTPS endpoints, restrict access to your n8n instance, rotate credentials, and follow least-privilege
+        practices for production deployments.
+      </p>
+
+      <h2>Children</h2>
+      <p>HealthGenie is not directed at children under 13 (or the minimum age required in your jurisdiction).</p>
+
+      <h2>Your choices</h2>
+      <ul>
+        <li>You can stop submitting data by uninstalling the app or discontinuing use of the web client.</li>
+        <li>You can clear local mobile storage by removing app data or uninstalling.</li>
+        <li>For data held in n8n or downstream systems, use the controls available in those systems.</li>
+      </ul>
+
+      <h2>Contact</h2>
+      <p>
+        For privacy questions related to <em>your</em> deployment, contact the operator of the n8n instance and
+        application. Replace this paragraph with your legal entity name and email before publishing.
+      </p>
+      <p><strong>Privacy contact (placeholder):</strong> privacy@example.com</p>
+
+      <h2>Changes</h2>
+      <p>
+        This policy may be updated as the prototype evolves. The “Last updated” date at the top will change when
+        material edits are made.
+      </p>
+
+      <p class="note">
+        This document is a <strong>starter template</strong> for developers and is not legal advice. Have qualified
+        counsel review your final policy before App Store submission or public use.
+      </p>
+    </main>
+  </body>
+</html>

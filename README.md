@@ -100,6 +100,8 @@ GitHub → your repo → **Settings** → **Pages** → **Build and deployment**
 | **Branch `main`**, folder **`/docs`** | `https://<user>.github.io/<repo>/privacy-policy.html` or `https://<user>.github.io/<repo>/` (redirects via `index.html`) |
 | **Branch `main`**, folder **`/` (root)** | `https://<user>.github.io/<repo>/docs/privacy-policy.html` |
 
+**User site (`nmanoharan.github.io`)** — static files to copy into repo `nmanoharan/nmanoharan.github.io` live in [`nmanoharan.github.io/`](nmanoharan.github.io/). Published URLs: `https://nmanoharan.github.io/` and `https://nmanoharan.github.io/privacy-policy.html`. See that folder’s README.
+
 For this repo as **`nmanoharan/healthgenie-agentic-app`** with Pages **folder `/docs`**, use:
 
 - **Privacy policy (App Store URL):** `https://nmanoharan.github.io/healthgenie-agentic-app/privacy-policy.html`
