@@ -100,6 +100,12 @@ GitHub → your repo → **Settings** → **Pages** → **Build and deployment**
 | **Branch `main`**, folder **`/docs`** | `https://<user>.github.io/<repo>/privacy-policy.html` or `https://<user>.github.io/<repo>/` (redirects via `index.html`) |
 | **Branch `main`**, folder **`/` (root)** | `https://<user>.github.io/<repo>/docs/privacy-policy.html` |
 
+For this repo as **`nmanoharan/healthgenie-agentic-app`** with Pages **folder `/docs`**, use:
+
+- **Privacy policy (App Store URL):** `https://nmanoharan.github.io/healthgenie-agentic-app/privacy-policy.html`
+- **Site root (redirects to policy):** `https://nmanoharan.github.io/healthgenie-agentic-app/`
+- **Confirm file on GitHub:** `https://github.com/nmanoharan/healthgenie-agentic-app/blob/main/docs/privacy-policy.html`
+
 If you pick **`/docs`**, do **not** put `/docs/` again in the path after the repo name.
 
 **If the page still does not open**
