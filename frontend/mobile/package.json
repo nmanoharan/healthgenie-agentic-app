@@ -5,13 +5,14 @@
   "main": "expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
+    "start:clean": "expo start -c",
     "ios": "expo run:ios",
     "android": "expo run:android"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "1.23.1",
     "expo": "~52.0.20",
-    "expo-asset": "^55.0.16",
+    "expo-asset": "~11.0.5",
     "expo-status-bar": "~2.0.0",
     "react": "18.3.1",
     "react-native": "0.76.3",

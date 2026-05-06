@@ -23,7 +23,9 @@
         "backgroundColor": "#001a4d"
       }
     },
-    "plugins": [],
+    "plugins": [
+      "expo-asset"
+    ],
     "extra": {
       "eas": {
         "projectId": "b86754a3-7805-4eae-ba14-96b298203a8f"
