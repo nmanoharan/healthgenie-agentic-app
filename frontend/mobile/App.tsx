@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar'
 import { useCallback, useEffect, useState } from 'react'
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -20,6 +21,10 @@ type Screen = 'welcome' | 'onboarding' | 'plan' | 'checkpoint' | 'safety'
 
 /** Inlined at bundle time; empty string in .env is treated as unset. */
 const N8N_BASE_CONFIGURED = Boolean(String(process.env.EXPO_PUBLIC_N8N_BASE_URL || '').trim())
+
+/** Matches app icon / native splash background. */
+const SPLASH_BG = '#001a4d'
+const MIN_BOOT_MS = 1200
 
 const STORAGE_ONBOARDING = 'healthgenie_last_onboarding'
 const STORAGE_CHECKPOINT = 'healthgenie_last_checkpoint'
@@ -164,20 +169,29 @@ export default function App() {
     activityDone: false,
     sleepPrep: false,
   })
+  const [appReady, setAppReady] = useState(false)
 
   useEffect(() => {
+    let cancelled = false
     void (async () => {
       try {
-        const [o, c] = await Promise.all([
-          AsyncStorage.getItem(STORAGE_ONBOARDING),
-          AsyncStorage.getItem(STORAGE_CHECKPOINT),
+        const [storagePair] = await Promise.all([
+          Promise.all([AsyncStorage.getItem(STORAGE_ONBOARDING), AsyncStorage.getItem(STORAGE_CHECKPOINT)]),
+          new Promise<void>((resolve) => setTimeout(resolve, MIN_BOOT_MS)),
         ])
+        const [o, c] = storagePair
+        if (cancelled) return
         if (o) setLastOnboarding(JSON.parse(o))
         if (c) setLastCheckpoint(JSON.parse(c))
       } catch {
         /* ignore */
+      } finally {
+        if (!cancelled) setAppReady(true)
       }
     })()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const persistOnboarding = useCallback(async (data: unknown) => {
@@ -267,6 +281,23 @@ export default function App() {
 
   const payloadWithPlan = parsePlan(lastOnboarding) ? lastOnboarding : parsePlan(lastCheckpoint) ? lastCheckpoint : null
   const parsedPlan = parsePlan(payloadWithPlan)
+
+  if (!appReady) {
+    return (
+      <SafeAreaProvider>
+        <View style={styles.bootRoot}>
+          <StatusBar style="light" />
+          <Image
+            source={require('./assets/icon.png')}
+            style={styles.bootIcon}
+            resizeMode="contain"
+            accessibilityLabel="HealthGenie"
+          />
+          <ActivityIndicator size="large" color="#93c5fd" style={styles.bootSpinner} />
+        </View>
+      </SafeAreaProvider>
+    )
+  }
 
   return (
     <SafeAreaProvider>
@@ -581,6 +612,19 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  bootRoot: {
+    flex: 1,
+    backgroundColor: SPLASH_BG,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  bootIcon: {
+    width: 280,
+    height: 280,
+    maxWidth: '78%',
+  },
+  bootSpinner: { marginTop: 28 },
   safe: { flex: 1, backgroundColor: '#0f1419' },
   header: {
     paddingHorizontal: 16,
