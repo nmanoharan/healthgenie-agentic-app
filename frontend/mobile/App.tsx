@@ -403,8 +403,9 @@ export default function App() {
             <View style={styles.card}>
               <Text style={styles.h2}>Welcome</Text>
               <Text style={styles.muted}>
-                Preventive wellness prototype. Calls your n8n webhooks (onboarding and daily checkpoint). Not medical
-                care.
+                Preventive wellness prototype. HealthGenie will use information provided by you for food and activity
+                recommendations and provide regular health checkpoints. This is not medical care, please consult your
+                doctor for any medical advice.
               </Text>
               <View style={styles.consentRow}>
                 <Switch value={consent} onValueChange={setConsent} />
