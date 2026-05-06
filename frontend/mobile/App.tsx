@@ -29,6 +29,23 @@ const MIN_BOOT_MS = 1200
 const STORAGE_ONBOARDING = 'healthgenie_last_onboarding'
 const STORAGE_CHECKPOINT = 'healthgenie_last_checkpoint'
 
+/** Onboarding age must be strictly between these bounds (years). */
+const AGE_LOWER = 18
+const AGE_UPPER = 130
+
+/** Placeholder color for “example only” hints (not submitted). */
+const INPUT_PLACEHOLDER_COLOR = '#5a6a7d'
+
+/** Example strings shown as placeholders—users must type their own values before submit. */
+const ONBOARDING_EXAMPLES: Partial<Record<keyof OnboardingForm, string>> = {
+  height_cm: 'e.g. 173',
+  weight_kg: 'e.g. 86',
+  goal: 'e.g. weight_loss',
+  diet_pref: 'e.g. vegetarian',
+  ethnicity: 'e.g. South Asian',
+  family_history: 'e.g. diabetes',
+}
+
 type OnboardingForm = {
   age: string
   height_cm: string
@@ -44,15 +61,15 @@ type OnboardingForm = {
 }
 
 const defaultOnboarding: OnboardingForm = {
-  age: '45',
-  height_cm: '173',
-  weight_kg: '86',
-  activity_level: 'low',
-  goal: 'weight_loss',
-  diet_pref: 'vegetarian',
-  ethnicity: 'south_asian',
-  family_history: 'diabetes',
-  medical_constraints: 'none',
+  age: '',
+  height_cm: '',
+  weight_kg: '',
+  activity_level: '',
+  goal: '',
+  diet_pref: '',
+  ethnicity: '',
+  family_history: '',
+  medical_constraints: '',
   sex: '',
   allergies: '',
 }
@@ -124,11 +141,13 @@ function mealLabel(index: number): string {
 
 function ChipRow({
   label,
+  referenceHint,
   options,
   value,
   onChange,
 }: {
   label: string
+  referenceHint?: string
   options: { key: string; label: string }[]
   value: string
   onChange: (v: string) => void
@@ -136,6 +155,7 @@ function ChipRow({
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
+      {referenceHint ? <Text style={styles.referenceHint}>{referenceHint}</Text> : null}
       <View style={styles.chipRow}>
         {options.map((o) => (
           <Pressable
@@ -214,18 +234,62 @@ export default function App() {
 
   const submitOnboarding = async () => {
     setError(null)
+    const ageTrimmed = onboardingForm.age.trim()
+    const ageNum = Number(ageTrimmed)
+    if (!ageTrimmed || !Number.isFinite(ageNum)) {
+      setError('Please enter your age.')
+      return
+    }
+    if (ageNum <= AGE_LOWER || ageNum >= AGE_UPPER) {
+      setError(`Age must be greater than ${AGE_LOWER} and less than ${AGE_UPPER}.`)
+      return
+    }
+    const heightTrim = onboardingForm.height_cm.trim()
+    const weightTrim = onboardingForm.weight_kg.trim()
+    if (!heightTrim || !Number.isFinite(Number(heightTrim))) {
+      setError('Please enter your height (cm).')
+      return
+    }
+    if (!weightTrim || !Number.isFinite(Number(weightTrim))) {
+      setError('Please enter your weight (kg).')
+      return
+    }
+    if (!onboardingForm.activity_level) {
+      setError('Please select your activity level.')
+      return
+    }
+    if (!onboardingForm.goal.trim()) {
+      setError('Please enter your goal.')
+      return
+    }
+    if (!onboardingForm.diet_pref.trim()) {
+      setError('Please enter your diet preference.')
+      return
+    }
+    if (!onboardingForm.ethnicity.trim()) {
+      setError('Please enter ethnicity / context (you may type “prefer not to say”).')
+      return
+    }
+    if (!onboardingForm.family_history.trim()) {
+      setError('Please enter family history.')
+      return
+    }
+    if (!onboardingForm.medical_constraints.trim()) {
+      setError('Please enter medical constraints (e.g. none if you have none).')
+      return
+    }
     setLoading(true)
     try {
       const body: Record<string, unknown> = {
-        age: Number(onboardingForm.age),
-        height_cm: Number(onboardingForm.height_cm),
-        weight_kg: Number(onboardingForm.weight_kg),
+        age: ageNum,
+        height_cm: Number(heightTrim),
+        weight_kg: Number(weightTrim),
         activity_level: onboardingForm.activity_level,
-        goal: onboardingForm.goal,
-        diet_pref: onboardingForm.diet_pref,
-        ethnicity: onboardingForm.ethnicity,
-        family_history: onboardingForm.family_history,
-        medical_constraints: onboardingForm.medical_constraints,
+        goal: onboardingForm.goal.trim(),
+        diet_pref: onboardingForm.diet_pref.trim(),
+        ethnicity: onboardingForm.ethnicity.trim(),
+        family_history: onboardingForm.family_history.trim(),
+        medical_constraints: onboardingForm.medical_constraints.trim(),
       }
       if (onboardingForm.sex.trim()) body.sex = onboardingForm.sex.trim()
       if (onboardingForm.allergies.trim()) body.allergies = onboardingForm.allergies.trim()
@@ -358,7 +422,10 @@ export default function App() {
           {screen === 'onboarding' && (
             <View style={styles.card}>
               <Text style={styles.h2}>Profile onboarding</Text>
-              <Text style={styles.muted}>Payload matches IMPORT_INSTRUCTIONS sample.</Text>
+              <Text style={styles.muted}>
+                Input your biometrics. Gray examples are for reference only—you must enter your own values (and pick
+                activity level) before submitting.
+              </Text>
               {(
                 [
                   ['age', 'Age', 'numeric'] as const,
@@ -379,12 +446,20 @@ export default function App() {
                     value={onboardingForm[key]}
                     onChangeText={(t) => setOnboardingForm((f) => ({ ...f, [key]: t }))}
                     keyboardType={kb === 'numeric' ? 'numeric' : 'default'}
-                    placeholder={key === 'sex' || key === 'allergies' ? 'optional' : undefined}
+                    placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
+                    placeholder={
+                      key === 'sex' || key === 'allergies'
+                        ? 'optional'
+                        : key === 'age'
+                          ? `Between ${AGE_LOWER + 1} and ${AGE_UPPER - 1}`
+                          : ONBOARDING_EXAMPLES[key]
+                    }
                   />
                 </View>
               ))}
               <ChipRow
                 label="Activity level"
+                referenceHint="Example: low — tap an option below (required)."
                 options={[
                   { key: 'low', label: 'low' },
                   { key: 'moderate', label: 'moderate' },
@@ -399,6 +474,8 @@ export default function App() {
                   style={[styles.input, styles.textarea]}
                   value={onboardingForm.medical_constraints}
                   onChangeText={(t) => setOnboardingForm((f) => ({ ...f, medical_constraints: t }))}
+                  placeholder="e.g. none"
+                  placeholderTextColor={INPUT_PLACEHOLDER_COLOR}
                   multiline
                 />
               </View>
@@ -407,7 +484,7 @@ export default function App() {
                 disabled={loading || !N8N_BASE_CONFIGURED}
                 onPress={submitOnboarding}
               >
-                {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnPrimaryText}>Submit to n8n</Text>}
+                {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnPrimaryText}>Submit</Text>}
               </Pressable>
               <Pressable style={styles.btnGhost} onPress={() => setScreen('welcome')}>
                 <Text style={styles.btnGhostText}>Back</Text>
@@ -661,6 +738,13 @@ const styles = StyleSheet.create({
   consentLabel: { flex: 1, color: '#e8eef5', fontSize: 14 },
   field: { marginTop: 4 },
   label: { color: '#8b9cb3', fontSize: 12, marginBottom: 4 },
+  referenceHint: {
+    color: '#6b7c8f',
+    fontSize: 12,
+    fontStyle: 'italic',
+    marginBottom: 6,
+    lineHeight: 17,
+  },
   input: {
     backgroundColor: '#0f1419',
     borderWidth: 1,
