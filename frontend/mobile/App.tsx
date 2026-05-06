@@ -481,7 +481,11 @@ export default function App() {
                 />
               </View>
               <Pressable
-                style={[styles.btnPrimary, (loading || !N8N_BASE_CONFIGURED) && styles.btnDisabled]}
+                style={[
+                  styles.btnPrimary,
+                  error ? styles.btnPrimaryError : null,
+                  (loading || !N8N_BASE_CONFIGURED) && styles.btnDisabled,
+                ]}
                 disabled={loading || !N8N_BASE_CONFIGURED}
                 onPress={submitOnboarding}
               >
@@ -527,7 +531,11 @@ export default function App() {
                 </View>
               ))}
               <Pressable
-                style={[styles.btnPrimary, (loading || !N8N_BASE_CONFIGURED) && styles.btnDisabled]}
+                style={[
+                  styles.btnPrimary,
+                  error ? styles.btnPrimaryError : null,
+                  (loading || !N8N_BASE_CONFIGURED) && styles.btnDisabled,
+                ]}
                 disabled={loading || !N8N_BASE_CONFIGURED}
                 onPress={submitCheckpoint}
               >
@@ -776,6 +784,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
   },
+  btnPrimaryError: { backgroundColor: '#dc2626' },
   btnPrimaryText: { color: '#fff', fontWeight: '600', fontSize: 16 },
   btnGhost: {
     borderWidth: 1,
